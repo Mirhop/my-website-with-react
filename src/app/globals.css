@@ -39,4 +39,9 @@
   .bg-size-200 {
     background-size: 200% auto;
   }
+
+.is-visible {
+    opacity: 1 !important;
+    transform: translateY(0) translateX(0) !important;
+  }
 }

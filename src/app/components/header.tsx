@@ -13,7 +13,9 @@ export default function Header() {
 
                 <div className="relative group">
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-sky-400 animate-border-pulse-custom group-hover:scale-110 transition-transform duration-300">
-                        <Image src="/Avatar.svg" alt="Avatar" width={150} height={150}/>
+                        <Link href="/about">
+                            <Image src="/Avatar.svg" alt="Avatar" width={150} height={150}/>
+                        </Link>
                     </div>
                 </div>
             </nav>
