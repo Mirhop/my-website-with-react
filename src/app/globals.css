@@ -1,3 +1,42 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    ::-webkit-scrollbar {
+        width: theme('spacing.2'); /* 8px */
+    }
+
+    ::-webkit-scrollbar-track {
+        /* BENAR: Opacity ( / 0.1 ) ada di DALAM theme() */
+        background: theme('colors.slate.900 / 0.1');
+    }
+
+    ::-webkit-scrollbar-thumb {
+        /* BENAR: Opacity ( / 0.3 ) ada di DALAM theme() */
+        background: theme('colors.cyan.400 / 0.3');
+        border-radius: theme('borderRadius.sm'); /* 4px */
+    }
+
+    html {
+        scrollbar-width: thin;
+        
+        /* BENAR: Hapus rgb() dan pakai sintaks theme() */
+        scrollbar-color: theme('colors.cyan.400 / 0.3') theme('colors.slate.900 / 0.1');
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+}
+
+@layer utilities {
+  .bg-size-200 {
+    background-size: 200% auto;
+  }
+}
