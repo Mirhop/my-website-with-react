@@ -1,8 +1,9 @@
 'use client'; // <-- WAJIB: Menandakan ini adalah Client Component
 
-import { useMemo, useRef, useEffect } from 'react';
+// Impor useState yang baru
+import { useMemo, useRef, useEffect, useState } from 'react';
 
-// --- Konfigurasi dipindah ke luar agar tidak dibuat ulang ---
+// --- Konfigurasi (Tidak berubah) ---
 const largeShapesConfig = [
   { sizeClasses: 'w-24 h-24 md:w-32 lg:w-48', className: 'bg-cyan-400/20 ring-2 ring-cyan-300/30', duration: 8, delay: 0 },
   { sizeClasses: 'w-20 h-20 md:w-28 lg:w-40', className: 'bg-indigo-400/25 ring-2 ring-indigo-300/40', duration: 10, delay: 2 },
@@ -14,45 +15,47 @@ const smallParticlesConfig = {
   className: 'w-1.5 h-1.5 bg-white/25',
 };
 
+// --- Tipe data untuk state (Opsional tapi bagus) ---
+interface Shape {
+  id: string;
+  left: string;
+  top: string;
+  animationDuration: string;
+  animationDelay: string;
+  className: string;
+}
+
 // --- Komponen Utama ---
 export default function FloatingBackground() {
   
-  // 1. MOUSE FOLLOWER
-  // Kita pakai 'useRef' untuk performa tinggi.
-  // Ini menghindari re-render setiap kali mouse bergerak.
+  // 1. MOUSE FOLLOWER (Tidak berubah)
   const followerRef = useRef<HTMLDivElement>(null);
 
-  // 'useEffect' menggantikan 'DOMContentLoaded' dan 'addEventListener'
   useEffect(() => {
-    // Fungsi 'handleMouseMove' Anda
     const handleMouseMove = (e: MouseEvent) => {
       if (followerRef.current) {
-        // -192 adalah setengah dari w-96 (384px / 2)
         followerRef.current.style.transform = `translate(${e.clientX - 192}px, ${e.clientY - 192}px)`;
       }
     };
-
-    // Cek media query
     const mediaQuery = window.matchMedia("(min-width: 768px)");
-    
     if (mediaQuery.matches) {
       document.addEventListener('mousemove', handleMouseMove);
     }
-
-    // PENTING: Cleanup function
-    // Ini akan dijalankan saat komponen 'unmount' (dihapus)
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
     };
-  }, []); // [] dependency array kosong = jalankan sekali saat 'mount'
+  }, []); 
 
-  // 2. SHAPES & PARTICLES
-  // 'useMemo' dipakai agar Math.random() HANYA dijalankan sekali
-  // saat komponen mount, bukan setiap kali re-render.
+  // 2. SHAPES & PARTICLES (INI YANG BERUBAH)
   
-  // --- Membuat data untuk Bola-bola Besar ---
-  const largeShapes = useMemo(() => {
-    return largeShapesConfig.map((config, i) => ({
+  // A. Mulai dengan state KOSONG. Server & Client akan me-render array kosong.
+  const [largeShapes, setLargeShapes] = useState<Shape[]>([]);
+  const [smallParticles, setSmallParticles] = useState<Shape[]>([]);
+
+  // B. Pindahkan logika 'useMemo' ke 'useEffect'
+  useEffect(() => {
+    // --- Membuat data untuk Bola-bola Besar ---
+    const generatedLargeShapes = largeShapesConfig.map((config, i) => ({
       id: `l-shape-${i}`,
       left: `${Math.random() * 100}vw`,
       top: `${Math.random() * 100}vh`,
@@ -60,11 +63,9 @@ export default function FloatingBackground() {
       animationDelay: `${config.delay}s`,
       className: `absolute rounded-full animate-float-custom ${config.sizeClasses} ${config.className}`,
     }));
-  }, []); // [] = jalankan sekali
 
-  // --- Membuat data untuk Partikel Kecil ---
-  const smallParticles = useMemo(() => {
-    return Array.from({ length: smallParticlesConfig.count }).map((_, i) => ({
+    // --- Membuat data untuk Partikel Kecil ---
+    const generatedSmallParticles = Array.from({ length: smallParticlesConfig.count }).map((_, i) => ({
       id: `s-particle-${i}`,
       left: `${Math.random() * 100}vw`,
       top: `${Math.random() * 100}vh`,
@@ -72,20 +73,25 @@ export default function FloatingBackground() {
       animationDelay: `${Math.random() * 10}s`,
       className: `absolute rounded-full animate-float-custom ${smallParticlesConfig.className}`,
     }));
-  }, []); // [] = jalankan sekali
+
+    // C. Set state HANYA di client. Ini akan memicu re-render.
+    setLargeShapes(generatedLargeShapes);
+    setSmallParticles(generatedSmallParticles);
+    
+  }, []); // [] = jalankan sekali HANYA di client, SETELAH hidrasi.
 
 
-  // --- Render JSX (Ini menggantikan document.createElement) ---
+  // --- Render JSX (Tidak berubah) ---
   return (
     <>
-      {/* 1. Mouse Follower (Elemen HTML-nya) */}
+      {/* 1. Mouse Follower */}
       <div
         id="mouse-follower"
-        ref={followerRef} // <-- Hubungkan ref
+        ref={followerRef} 
         className="hidden md:block absolute top-0 left-0 w-96 h-96 bg-sky-300/10 rounded-full blur-3xl pointer-events-none"
       />
       
-      {/* 2. Floating Shapes Container (Elemen HTML-nya) */}
+      {/* 2. Floating Shapes Container */}
       <div
         id="floating-shapes-container"
         className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10"
